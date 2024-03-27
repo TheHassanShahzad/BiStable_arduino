@@ -67,19 +67,43 @@ void subscription_callback(const void *msgin)
   float ki_change = msg->angular.y;
   float kd_change = msg->angular.z;
 
-//  if (eq_change > 0){
-//    digitalWrite(LED_PIN, HIGH);
-//  }
-//  else{
-//    digitalWrite(LED_PIN, LOW);
-//  }
-//
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+
+  //display.setCursor(0, 10);
+  display.print("BiStable");
+
+  display.setTextSize(1);
+  display.setCursor(0, 20);
+  display.print("Eq = ");
+  display.print(eq);
+  display.print(" yaw = ");
+  display.println(roll, 1);
+
+  display.setCursor(0, 30);
+  display.print("Kp = ");
+  display.println(kp);
+  
+  display.setCursor(0, 40);
+  display.print("Ki = ");
+  display.println(ki);
+
+  display.setCursor(0, 50);
+  display.print("Kd = ");
+  display.println(kd);
+  
+  display.display();
+  //delay(2000);
+  display.clearDisplay(); 
+  
   if (eq_change != 0 or kp_change != 0 or ki_change != 0 or kd_change != 0){
-    digitalWrite(LED_PIN, HIGH);
     eq += eq_change;
     kp += kp_change;
     ki += ki_change;
     kd += kd_change;
+    
+    digitalWrite(LED_PIN, HIGH);
     
     EEPROM.put(0, eq);
     EEPROM.put(sizeof(float), kp);
@@ -318,35 +342,35 @@ void loop() {
   
   RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
   // Display Text
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-
-  //display.setCursor(0, 10);
-  display.print("BiStable");
-
-  display.setTextSize(1);
-  display.setCursor(0, 20);
-  display.print("Eq = ");
-  display.print(eq);
-  display.print(" yaw = ");
-  display.println(pitch, 0);
-
-  display.setCursor(0, 30);
-  display.print("Kp = ");
-  display.println(kp);
-  
-  display.setCursor(0, 40);
-  display.print("Ki = ");
-  display.println(ki);
-
-  display.setCursor(0, 50);
-  display.print("Kd = ");
-  display.println(kd);
-  
-
-
-  display.display();
-  //delay(2000);
-  display.clearDisplay();
+//  display.setTextSize(2);
+//  display.setTextColor(WHITE);
+//  display.setCursor(0, 0);
+//
+//  //display.setCursor(0, 10);
+//  display.print("BiStable");
+//
+//  display.setTextSize(1);
+//  display.setCursor(0, 20);
+//  display.print("Eq = ");
+//  display.print(eq);
+//  display.print(" yaw = ");
+//  display.println(pitch, 0);
+//
+//  display.setCursor(0, 30);
+//  display.print("Kp = ");
+//  display.println(kp);
+//  
+//  display.setCursor(0, 40);
+//  display.print("Ki = ");
+//  display.println(ki);
+//
+//  display.setCursor(0, 50);
+//  display.print("Kd = ");
+//  display.println(kd);
+//  
+//
+//
+//  display.display();
+//  //delay(2000);
+//  display.clearDisplay();
 }

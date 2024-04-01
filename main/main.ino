@@ -59,6 +59,15 @@ float eq;
 float kp;
 float ki;
 float kd;
+float wheel_radius = 0.115/2;
+float target_inclination = 0.0;
+float steer_vel = 0.0;
+float incl_err;
+float prev_incl_err = 0.0;
+float integral;
+unsigned long prevMillis;
+unsigned long prev_loop_time = 0.0;
+
 
 void error_loop(){
   while(1){
@@ -72,7 +81,7 @@ void subscription_callback(const void *msgin)
   const geometry_msgs__msg__Twist *msg = (const geometry_msgs__msg__Twist *)msgin;
   
   // Reading all 6 floats from twist message
-  float inclination = msg->linear.x;
+  float target_inclination = msg->linear.x;
   float steer_velocity = msg->linear.y;
   float eq_change = msg->linear.z;
   float kp_change  = msg->angular.x;
@@ -209,19 +218,61 @@ void setup() {
 
 }
 
+float calcAngularVel(float linearVel){ 
+//  angular vel is in rad/s
+//linear vel is in metres/s
+  return linearVel / wheel_radius;
+}
+
+//void driveLeftStepper(float angularVel){
+////  drive left stepper at some angular vel in rad/s
+//}
+//
+//void driveRightStepper(float angularVel){
+////  drive right stepper at some angular vel in rad/s
+//}
+
+float balance_pid(float err, float prev_err, float *integral_ptr, float interval){
+  float control_signal;
+  if (interval != 0.0) {
+    *integral_ptr += err*interval; // CHANGE integral term calculation to trapezoidal rule if steady state error persists             
+    float derivative = (err - prev_err)/interval;
+    control_signal = kp*err + ki*integral + kd*derivative; 
+  }
+  else {
+//    control_signal = kp*err + ki*integral; // REMOVE integral term if using trapezoidal rule
+    control_signal = 0;
+  }
+  return control_signal;
+}
 
 void loop() {
+  unsigned long currentMillis = millis();
+  
   // MPU stuff
   if (!dmpReady) return;
   if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     Serial.print("ypr\t");
-    pitch = ypr[0] * rad2deg ;
+    pitch = ypr[0] * rad2deg;
     Serial.println(pitch);
-
   }
   // end of MPU stuff
+
+  // PID
+  incl_err = eq - target_inclination - pitch; 
+  float balance_vel = balance_pid(incl_err, prev_incl_err, &integral, prev_loop_time);
+
+  // Stepper motor drive
+//  right_wheel_vel_cmd = balance_vel + steer_vel;
+//  left_wheel_vel_cmd = balance_vel - steer_vel;
+//  driveRightStepper(right_wheel_vel_cmd);
+//  driveLeftStepper(left_wheel_vel_cmd);
+  
+  prev_incl_err = incl_err;
+  prevMillis = currentMillis;
+  prev_loop_time = currentMillis - prevMillis;
   
   RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 

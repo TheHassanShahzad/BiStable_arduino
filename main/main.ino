@@ -261,7 +261,7 @@ void loop() {
   // end of MPU stuff
 
   // PID
-  incl_err = eq - target_inclination - pitch; 
+  incl_err = target_inclination - eq - pitch; 
   float balance_vel = balance_pid(incl_err, prev_incl_err, &integral, prev_loop_time);
 
   // Stepper motor drive
